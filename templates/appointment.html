@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+{% block title %}Schedule Appointment{% endblock %}
+{% block content %}
+    <h2>Schedule an Appointment</h2>
+    <div style="display: flex; justify-content: space-between;">
+        <form method="POST" action="/appointment" id="appointment-form" style="width: 100%;">
+            <!-- Left: Customer Information -->
+            <div style="flex: 1; padding-right: 1rem;">
+                <h3>Customer Information</h3>
+                <div class="form-group">
+                    <label for="customer_name">Full Name:</label>
+                    <input type="text" id="customer_name" name="customer_name" value="{{ username }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="phone_number">Phone Number:</label>
+                    <input type="tel" id="phone_number" name="phone_number" pattern="[0-9]{10}" required>
+                </div>
+            </div>
+            
+            <!-- Right: Appointment Form -->
+            <div style="flex: 1;">
+                <div class="form-group">
+                    <label for="city">Select City:</label>
+                    <select name="city" id="city" onchange="this.form.submit()" required>
+                        <option value="" {% if not selected_city %}selected{% endif %}>-- Select a City --</option>
+                        {% for city in cities %}
+                            <option value="{{ city }}" {% if selected_city == city %}selected{% endif %}>{{ city }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                {% if selected_city %}
+                    {% if available_dates %}
+                        <div class="form-group">
+                            <label>Available Dates (April 2025):</label>
+                            <div class="calendar" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center;">
+                                {% for date in calendar_dates %}
+                                    {% set is_available = date in available_dates %}
+                                    <div 
+                                        data-date="{{ date }}" 
+                                        class="calendar-day {% if is_available %}available{% endif %}"
+                                        {% if is_available %}onclick="selectDate('{{ date }}')"{% endif %}>
+                                        {{ date.split('-')[2] }} <!-- Show only day number -->
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            <input type="hidden" name="selected_date" id="selected-date" value="">
+                        </div>
+                        {% if selected_date and available_times %}
+                            <div class="form-group">
+                                <label>Select Time Slot:</label>
+                                <div class="time-slots">
+                                    {% for time in available_times %}
+                                        <label class="time-slot">
+                                            <input type="radio" name="selected_time" value="{{ time }}" required>
+                                            {{ time }}
+                                        </label>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <button type="submit" id="submit-appointment" class="submit-button">Submit Appointment</button>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <p class="message">NO SLOTS AVAILABLE</p>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </form>
+    </div>
+    
+    {% if message %}
+        <p class="message">{{ message }}</p>
+    {% endif %}
+    <div class="link">
+        <a href="{{ url_for('login') }}">Back to Login</a>
+    </div>
+
+    <script>
+        function selectDate(date) {
+            document.getElementById('selected-date').value = date;
+            document.getElementById('submit-appointment').disabled = false;
+            
+            // Highlight selected date
+            document.querySelectorAll('.calendar div').forEach(div => {
+                const date = div.getAttribute('data-date');
+                const availableDates = JSON.parse('{{ available_dates|tojson|safe }}');
+                div.style.backgroundColor = availableDates.includes(date) ? '#d4edda' : '';
+                div.style.border = availableDates.includes(date) ? '2px solid #28a745' : '1px solid #ddd';
+            });
+            document.querySelector(`[data-date="${date}"]`).style.backgroundColor = '#cce5ff';
+            document.querySelector(`[data-date="${date}"]`).style.border = '2px solid #007bff';
+        }
+    </script>
+
+    <style>
+    .calendar-day {
+        padding: 10px;
+        border: 1px solid #ddd;
+        cursor: default;
+    }
+    .calendar-day.available {
+        cursor: pointer;
+        background-color: #d4edda;
+        border: 2px solid #28a745;
+    }
+    .time-slots {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 10px;
+    }
+    .time-slot {
+        padding: 8px 16px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    .time-slot:hover {
+        background-color: #f8f9fa;
+    }
+    .form-group {
+        margin-bottom: 15px;
+    }
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+    }
+    .form-group input {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+    .submit-button {
+        background-color: #007bff;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        width: 100%;
+    }
+    .submit-button:hover {
+        background-color: #0056b3;
+    }
+    .submit-button:disabled {
+        background-color: #cccccc;
+        cursor: not-allowed;
+    }
+    </style>
+{% endblock %}

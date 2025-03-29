@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Register{% endblock %}
+{% block content %}
+    <h2>Register</h2>
+    <form method="POST" action="/register">
+        <div class="form-group">
+            <input type="text" name="username" placeholder="Username" required>
+        </div>
+        <div class="form-group">
+            <input type="password" name="password" placeholder="Password" required>
+        </div>
+        <div class="form-group">
+            <input type="password" name="confirm_password" placeholder="Confirm Password" required>
+        </div>
+        {% for question in questions %}
+        <div class="form-group">
+            <p>{{ question }}</p>
+            <input type="text" name="security_a{{ loop.index }}" placeholder="Answer" required>
+        </div>
+        {% endfor %}
+        <button type="submit">Register</button>
+    </form>
+    {% if message %}
+        <p class="message">{{ message }}</p>
+    {% endif %}
+    <div class="link">
+        <a href="{{ url_for('login') }}">Already have an account? Login</a>
+    </div>
+{% endblock %}
